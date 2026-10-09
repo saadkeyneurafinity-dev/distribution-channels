@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HumanPost Teardown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=JetBrains+Mono:wght@400;600&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: a field dossier. Sticky contents rail on the left, a 68ch reading column, wider plates for diagrams, tables and the calculator. The airmail stripe and one postmark are the only loud elements. */
+:root {
+  --paper: #F3F5F9;
+  --surface: #FFFFFF;
+  --ink: #131D35;
+  --ink-2: #4A5673;
+  --rule: #D2D9E5;
+  --red: #BE3439;
+  --blue: #2352AC;
+  --red-tint: #FBE8E8;
+  --blue-tint: #E5ECF9;
+  --code: #ECF0F7;
+  --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.75rem;
+  --step-3: 2.75rem;
+  --step-4: clamp(3.5rem, 11vw, 7rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D1323;
+    --surface: #141C30;
+    --ink: #E5EAF4;
+    --ink-2: #A2ADC5;
+    --rule: #28334F;
+    --red: #EF6C6E;
+    --blue: #7EA4F3;
+    --red-tint: #391D25;
+    --blue-tint: #18264A;
+    --code: #10182B;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D1323;
+  --surface: #141C30;
+  --ink: #E5EAF4;
+  --ink-2: #A2ADC5;
+  --rule: #28334F;
+  --red: #EF6C6E;
+  --blue: #7EA4F3;
+  --red-tint: #391D25;
+  --blue-tint: #18264A;
+  --code: #10182B;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--blue); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 2px; }
+
+.airmail {
+  height: 10px;
+  background: repeating-linear-gradient(-45deg,
+    var(--red) 0 14px, var(--paper) 14px 22px,
+    var(--blue) 22px 36px, var(--paper) 36px 44px);
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: 20px;
+}
+
+/* ---------- Hero ---------- */
+.hero { padding-block: 48px 40px; border-bottom: 1px solid var(--rule); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: start; }
+.eyebrow, .label {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--step-4);
+  line-height: 0.92;
+  letter-spacing: 0.005em;
+  margin: 12px 0 20px;
+  text-wrap: balance;
+}
+.lede { font-size: var(--step-1); line-height: 1.5; max-width: 60ch; margin: 0; }
+.hero-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 20px; font-family: var(--mono); font-size: var(--step--1); }
+
+.postmark { width: 168px; color: var(--red); transform: rotate(-9deg); margin-top: 8px; }
+.postmark svg { display: block; width: 100%; height: auto; }
+.postmark text { font-family: var(--mono); fill: currentColor; }
+.postmark .big { font-family: var(--display); font-weight: 800; }
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 36px 0 0;
+  border-top: 2px solid var(--ink);
+}
+.facts > div { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+.facts dt { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.facts dd { margin: 4px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- Layout ---------- */
+.layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 56px; padding-block: 40px 72px; }
+.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; }
+.toc ol { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 2px; border-left: 1px solid var(--rule); }
+.toc a {
+  display: block;
+  padding: 5px 0 5px 14px;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+.toc a:hover { color: var(--ink); }
+.toc a[aria-current="true"] { color: var(--ink); border-left-color: var(--red); font-weight: 600; }
+
+main { min-width: 0; }
+section { padding-block: 8px 48px; scroll-margin-top: 24px; }
+section + section { border-top: 1px solid var(--rule); padding-top: 40px; }
+h2 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--step-3);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  margin: 6px 0 18px;
+  text-wrap: balance;
+}
+h3 { font-size: var(--step-1); line-height: 1.3; margin: 32px 0 10px; text-wrap: balance; }
+.prose { max-width: 68ch; }
+.prose p, .prose ul, .prose ol { margin: 0 0 16px; }
+.prose li { margin-bottom: 6px; }
+.muted { color: var(--ink-2); }
+.small { font-size: 0.9375rem; }
+
+.chip {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  vertical-align: 0.15em;
+  white-space: nowrap;
+}
+.chip.claim { background: var(--red-tint); color: var(--red); }
+.chip.checked { background: var(--blue-tint); color: var(--blue); }
+.chip.note { border: 1px solid var(--rule); color: var(--ink-2); }
+
+blockquote.launch {
+  margin: 24px 0;
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  max-width: 68ch;
+}
+blockquote.launch p { margin: 0 0 12px; font-size: var(--step-1); line-height: 1.45; }
+blockquote.launch ul { margin: 0 0 12px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+blockquote.launch li { font-family: var(--mono); font-size: var(--step--1); padding: 3px 8px; border: 1px solid var(--rule); border-radius: 3px; }
+blockquote.launch footer { font-size: 0.9375rem; color: var(--ink-2); }
+
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 28px; }
+.three > div { border-top: 2px solid var(--ink); padding-top: 12px; min-width: 0; }
+.three h3 { margin: 0 0 6px; font-size: 1.0625rem; }
+.three p { margin: 0; font-size: 0.9375rem; color: var(--ink-2); }
+
+/* ---------- Lifecycle ---------- */
+.steps { list-style: none; margin: 24px 0 0; padding: 0; counter-reset: step; max-width: 76ch; }
+.steps li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 16px;
+  padding-bottom: 22px;
+  position: relative;
+}
+.steps li::before {
+  content: counter(step);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  position: relative;
+  z-index: 1;
+}
+.steps li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 21px; top: 44px; bottom: 0;
+  border-left: 2px dashed var(--rule);
+}
+.steps h3 { margin: 8px 0 4px; font-size: 1.0625rem; }
+.steps p { margin: 0; color: var(--ink-2); }
+
+/* ---------- Diagram ---------- */
+.plate {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 24px 0;
+}
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; position: relative; }
+.lane { display: grid; gap: 10px; align-content: start; min-width: 0; position: relative; }
+.lane .label { margin-bottom: 2px; }
+.node {
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  padding: 12px 14px;
+  background: var(--paper);
+  min-width: 0;
+}
+.node strong { display: block; font-size: 1rem; line-height: 1.3; }
+.node span { display: block; font-size: 0.875rem; color: var(--ink-2); line-height: 1.4; margin-top: 2px; }
+.node.hub { border-color: var(--red); border-width: 2px; }
+.node.hub ul { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px; }
+.node.hub li { font-family: var(--mono); font-size: 0.75rem; padding: 2px 6px; background: var(--red-tint); color: var(--red); border-radius: 3px; }
+.node.dashed { border-style: dashed; border-color: var(--ink-2); }
+.lane:not(:last-child)::after {
+  content: "\2192";
+  position: absolute;
+  right: -22px; top: 50%;
+  font-size: 1.25rem;
+  color: var(--ink-2);
+  transform: translateY(-50%);
+}
+.loop {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1.5px dashed var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.table-wrap { overflow-x: auto; margin: 20px 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--rule); }
+tr:last-child td { border-bottom: 0; }
+thead th { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; background: var(--paper); }
+tbody th { font-weight: 600; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--mono); font-size: 0.875rem; }
+.wide-table { min-width: 680px; }
+
+/* ---------- API ---------- */
+pre {
+  background: var(--code);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  margin: 16px 0 8px;
+}
+code { font-family: var(--mono); font-size: 0.875em; background: var(--code); padding: 1px 5px; border-radius: 3px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+.c { color: var(--ink-2); }
+.k { color: var(--red); font-weight: 600; }
+.s { color: var(--blue); }
+.docmap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
+.docmap > div { min-width: 0; border-top: 2px solid var(--ink); padding-top: 10px; }
+.docmap ul { margin: 6px 0 0; padding: 0; list-style: none; font-size: 0.9375rem; }
+
+/* ---------- Pricing ---------- */
+.plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.plan {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 0;
+}
+.plan.featured { border: 2px solid var(--ink); }
+.plan h3 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.75rem; letter-spacing: 0.01em; }
+.plan .tag { font-size: 0.9375rem; color: var(--ink-2); margin: 0; }
+.price { font-family: var(--display); font-weight: 800; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.price small { font-family: var(--body); font-weight: 400; font-size: 0.9375rem; color: var(--ink-2); }
+.plan ul { margin: 4px 0 0; padding: 0 0 0 18px; font-size: 0.9375rem; }
+.plan li { margin-bottom: 4px; }
+.plan .foot { margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--rule); font-size: 0.875rem; color: var(--ink-2); }
+
+/* ---------- Calculator ---------- */
+.calc { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 32px; }
+.field { display: grid; gap: 6px; margin-bottom: 22px; }
+.field label { font-weight: 600; }
+.field .row { display: flex; align-items: center; gap: 12px; }
+.field input[type="range"] { flex: 1; min-width: 0; accent-color: var(--red); }
+.field output { font-family: var(--mono); font-variant-numeric: tabular-nums; min-width: 7ch; text-align: right; font-weight: 600; }
+.field .hint { font-size: 0.8125rem; color: var(--ink-2); }
+.totals { font-family: var(--mono); font-size: var(--step--1); color: var(--ink-2); }
+.result { display: grid; gap: 14px; }
+.res-card {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: var(--paper);
+  display: grid; gap: 8px;
+}
+.res-card.win { border: 2px solid var(--ink); }
+.res-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.res-head strong { font-size: 1.0625rem; }
+.res-fig { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.9375rem; }
+.res-fig b { font-family: var(--display); font-weight: 800; font-size: 1.75rem; letter-spacing: 0.01em; }
+.bar { height: 10px; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; transition: width 0.25s ease; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+.bar.l i { background: var(--blue); }
+.bar.s i { background: var(--red); }
+.res-note { font-size: 0.8125rem; color: var(--ink-2); margin: 0; }
+.res-card.off { opacity: 0.6; }
+.verdict { font-size: 0.9375rem; margin: 0; }
+
+/* ---------- Results ---------- */
+.figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); margin: 20px 0; }
+.figs > div { padding: 16px 16px 16px 0; min-width: 0; }
+.figs b { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 5vw, 3rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.figs span { display: block; font-size: 0.875rem; color: var(--ink-2); margin-top: 6px; }
+.mathcheck { font-family: var(--mono); font-size: 0.8125rem; background: var(--blue-tint); color: var(--ink); border-radius: 6px; padding: 12px 14px; max-width: 68ch; overflow-x: auto; }
+
+/* ---------- Timeline ---------- */
+.timeline { list-style: none; margin: 20px 0 0; padding: 0; max-width: 76ch; }
+.timeline li { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.timeline time, .timeline .when { font-family: var(--mono); font-size: 0.875rem; color: var(--ink-2); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.timeline p { margin: 0; }
+
+/* ---------- Risks ---------- */
+.risks { list-style: none; padding: 0; margin: 20px 0 0; max-width: 76ch; display: grid; gap: 14px; }
+.risks li { display: grid; grid-template-columns: 6px minmax(0, 1fr); gap: 16px; }
+.risks li::before { content: ""; background: var(--red); border-radius: 3px; }
+.risks li.mid::before { background: var(--blue); }
+.risks strong { display: block; }
+.risks p { margin: 2px 0 0; color: var(--ink-2); }
+
+/* ---------- Build ---------- */
+.lessons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; margin: 20px 0; }
+.lessons > div { min-width: 0; }
+.lessons h3 { margin: 0 0 4px; font-size: 1.0625rem; }
+.lessons p { margin: 0; color: var(--ink-2); font-size: 0.9375rem; }
+.ideas { display: grid; gap: 12px; margin: 16px 0; }
+.idea { border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; background: var(--surface); }
+.idea strong { display: block; margin-bottom: 2px; }
+.idea p { margin: 0; font-size: 0.9375rem; color: var(--ink-2); }
+.checklist { columns: 2; column-gap: 32px; padding-left: 20px; max-width: 80ch; }
+.checklist li { break-inside: avoid; margin-bottom: 8px; }
+
+.namesakes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.namesakes > div { border-top: 1px solid var(--ink); padding-top: 10px; min-width: 0; }
+.namesakes p { margin: 4px 0 0; font-size: 0.9375rem; color: var(--ink-2); }
+.namesakes a { font-family: var(--mono); font-size: 0.875rem; }
+
+.sources { columns: 2; column-gap: 32px; font-size: 0.875rem; padding-left: 20px; }
+.sources li { break-inside: avoid; margin-bottom: 6px; overflow-wrap: anywhere; }
+
+.pagefoot { border-top: 1px solid var(--rule); padding-block: 24px 40px; font-size: 0.875rem; color: var(--ink-2); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .toc { position: static; border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; background: var(--surface); }
+  .toc ol { border-left: 0; display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .toc a { border: 1px solid var(--rule); border-radius: 4px; padding: 3px 9px; margin: 0; font-size: 0.875rem; }
+  .toc a[aria-current="true"] { border-color: var(--red); }
+  .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lane:nth-child(2)::after { content: none; }
+  .docmap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calc { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .hero { padding-block: 32px 28px; }
+  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .postmark { width: 132px; order: -1; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .three, .plans, .lessons, .namesakes { grid-template-columns: minmax(0, 1fr); }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .lane::after { content: "\2193" !important; right: auto !important; left: 50%; top: auto !important; bottom: -26px; transform: translateX(-50%) !important; }
+  .lane:last-child::after { content: none !important; }
+  .checklist, .sources { columns: 1; }
+  .timeline li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .plate { padding: 18px 16px; }
+  :root { --step-3: 2.25rem; }
+}
+@media (max-width: 420px) {
+  .wrap { padding-inline: 16px; }
+  .facts { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="airmail" aria-hidden="true"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">Platform teardown · Researched 9 October 2026</div>
+        <h1>HumanPost</h1>
+        <p class="lede">A service that pays real people in the United States to run TikTok and Instagram accounts for brands and post their content by hand. You design the accounts and supply the content. HumanPost finds the posters, warms the accounts up, routes every task, collects proof and reports the views.</p>
+        <div class="hero-links">
+          <a href="https://humanpost.com/" target="_blank" rel="noopener">humanpost.com</a>
+          <a href="https://humanpost.co/docs/quickstart" target="_blank" rel="noopener">API docs (humanpost.co)</a>
+          <a href="https://x.com/itsmehakvohra/status/2093448950384820647" target="_blank" rel="noopener">Launch post on X</a>
+        </div>
+      </div>
+      <div class="postmark" aria-label="Postmark: posted by hand, 13,908 humans, USA">
+        <svg viewBox="0 0 200 150" role="img" aria-hidden="true">
+          <circle cx="72" cy="75" r="66" fill="none" stroke="currentColor" stroke-width="3"/>
+          <circle cx="72" cy="75" r="56" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path id="pm-top" d="M 29 75 A 43 43 0 0 1 115 75" fill="none"/>
+          <path id="pm-bot" d="M 22 75 A 50 50 0 0 0 122 75" fill="none"/>
+          <text font-size="10" letter-spacing="1.6"><textPath href="#pm-top" startOffset="50%" text-anchor="middle">POSTED BY HAND</textPath></text>
+          <text font-size="11" letter-spacing="2.2"><textPath href="#pm-bot" startOffset="50%" text-anchor="middle">HUMANS · USA</textPath></text>
+          <text class="big" x="72" y="85" font-size="30" text-anchor="middle">13,908</text>
+          <path d="M140 48 q8 -6 16 0 t16 0 t16 0 M140 66 q8 -6 16 0 t16 0 t16 0 M140 84 q8 -6 16 0 t16 0 t16 0 M140 102 q8 -6 16 0 t16 0 t16 0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <dl class="facts">
+      <div><dt>Company</dt><dd>San Francisco · founded 2026</dd></div>
+      <div><dt>Founders</dt><dd>Mehak Vohra (CEO), Miles Feldstein</dd></div>
+      <div><dt>Public launch</dt><dd>28 Aug 2026, on X</dd></div>
+      <div><dt>Channels</dt><dd>TikTok and Instagram</dd></div>
+      <div><dt>Price</dt><dd>From $180 a month</dd></div>
+      <div><dt>Claimed average CPM</dt><dd>$0.67 over the last 90 days</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="Contents">
+    <div class="label">Contents</div>
+    <ol>
+      <li><a href="#what">What it is</a></li>
+      <li><a href="#how">How a campaign runs</a></li>
+      <li><a href="#machine">The machine</a></li>
+      <li><a href="#api">Built for AI agents</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#calculator">Plan calculator</a></li>
+      <li><a href="#results">Claimed results</a></li>
+      <li><a href="#team">Team and timeline</a></li>
+      <li><a href="#risks">Reception and risks</a></li>
+      <li><a href="#landscape">Landscape</a></li>
+      <li><a href="#build">Building your own</a></li>
+      <li><a href="#namesakes">Same name, different products</a></li>
+      <li><a href="#method">Method and gaps</a></li>
+      <li><a href="#sources">Sources</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- What it is -->
+    <section id="what">
+      <div class="label">01 · Overview</div>
+      <h2>What it is</h2>
+      <div class="prose">
+        <p>HumanPost sells organic distribution as a service. A brand that would normally run one account and post a few times a week instead gets 10, 100 or 1,000 dedicated accounts. Each one is run by a different person in the US, and each one posts the brand's videos or photo carousels.</p>
+        <p>The brand never talks to the posters. It works through a dashboard, or lets its own AI agent drive everything through an API or an MCP server. The site describes the job as owning the posting workflow end to end, from content instructions to proof and reporting.</p>
+      </div>
+
+      <blockquote class="launch">
+        <p>“Introducing HumanPost — hire an army of Americans to post your TikToks. Get 10, 100, or 1,000 dedicated social accounts for your company.”</p>
+        <ul>
+          <li>Run by real people in the US</li>
+          <li>Warmed up specifically for your niche</li>
+          <li>Dedicated accounts just for your brand</li>
+          <li>Zero VPNs</li>
+        </ul>
+        <footer>Mehak Vohra, launch post on X, 28 August 2026</footer>
+      </blockquote>
+
+      <div class="three">
+        <div>
+          <h3>Volume wins on short-form</h3>
+          <p>TikTok and Reels show posts to an interest-based feed, so new accounts can reach strangers. Many accounts testing many hooks find winners faster than one account can.</p>
+        </div>
+        <div>
+          <h3>Real people, not bots</h3>
+          <p>The pitch rests on verified US posters, real accounts and no VPNs. HumanPost presents this as the difference between it and automated account farms. <span class="chip claim">Company claim</span></p>
+        </div>
+        <div>
+          <h3>Creators are slow to manage</h3>
+          <p>Briefing, contracting, chasing and paying dozens of creators is the work HumanPost takes over. Its posters execute instructions and don't negotiate.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How -->
+    <section id="how">
+      <div class="label">02 · Workflow</div>
+      <h2>How a campaign runs</h2>
+      <p class="prose">Every account goes through the same lifecycle. The FAQ says a campaign can be set up in minutes: upload content, add instructions, and HumanPost routes the tasks to people.</p>
+      <ol class="steps">
+        <li><div><h3>Design the accounts</h3><p>You choose each account's profile photo, username, bio and terms, for TikTok or Instagram.</p></div></li>
+        <li><div><h3>A poster is assigned</h3><p>Each account gets a US-based poster automatically. The poster creates the account by hand to your spec.</p></div></li>
+        <li><div><h3>Warm-up</h3><p>You share niche keywords and product context. The accounts engage with related content before they post anything, so each one starts out looking like it belongs in your niche.</p></div></li>
+        <li><div><h3>Send content</h3><p>You upload videos or photos; carousels are supported. Posters publish only the content you approve and have no creative control.</p></div></li>
+        <li><div><h3>Comment tasks</h3><p>Each plan includes a quota of comment tasks, also completed by hand.</p></div></li>
+        <li><div><h3>Proof and reporting</h3><p>HumanPost collects proof for every completed task. Posts, views, comments, likes and experiments show up in one dashboard.</p></div></li>
+        <li><div><h3>Boost the winners</h3><p>Plans include “SparkCode requests”. On TikTok, a Spark Ads code lets an advertiser put paid spend behind an organic post that is already working. <span class="chip note">Our reading; the site doesn't define it</span></p></div></li>
+      </ol>
+    </section>
+
+    <!-- Machine -->
+    <section id="machine">
+      <div class="label">03 · System</div>
+      <h2>The machine</h2>
+      <p class="prose">HumanPost is a three-sided system: buyers on one side, a pool of posters on the other, and software in the middle that turns a content upload into hundreds of small, checkable tasks.</p>
+
+      <div class="plate" role="figure" aria-label="Diagram of how work flows through HumanPost">
+        <div class="flow">
+          <div class="lane">
+            <div class="label">Demand</div>
+            <div class="node"><strong>Brand team</strong><span>Dashboard: design accounts, upload content</span></div>
+            <div class="node"><strong>AI agent</strong><span>API, MCP server or CLI</span></div>
+          </div>
+          <div class="lane">
+            <div class="label">HumanPost</div>
+            <div class="node hub"><strong>Task router</strong><span>Turns a campaign into per-account tasks</span>
+              <ul><li>assign</li><li>instruct</li><li>remind</li><li>collect proof</li><li>report</li></ul>
+            </div>
+            <div class="node dashed"><strong>Managed Service</strong><span>Optional: strategy, content creation, testing</span></div>
+          </div>
+          <div class="lane">
+            <div class="label">Supply</div>
+            <div class="node"><strong>US posters</strong><span>13,908 “ready to post” per the homepage counter</span></div>
+            <div class="node"><strong>Hand-done tasks</strong><span>Create account · warm up · post · comment</span></div>
+          </div>
+          <div class="lane">
+            <div class="label">Platforms</div>
+            <div class="node"><strong>TikTok</strong><span>Dedicated brand accounts</span></div>
+            <div class="node"><strong>Instagram</strong><span>Dedicated brand accounts</span></div>
+          </div>
+        </div>
+        <div class="loop">Views, likes, comments and proof of each task flow back to the dashboard and the API</div>
+      </div>
+
+      <h3>Who does what</h3>
+      <div class="table-wrap">
+        <table class="wide-table">
+          <thead><tr><th scope="col">Stage</th><th scope="col">You (the brand)</th><th scope="col">HumanPost</th><th scope="col">The poster</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Content</th><td>Supply all of it, or buy Managed Service</td><td>Creates nothing on self-serve plans</td><td>No creative control</td></tr>
+            <tr><th scope="row">Account identity</th><td>Pick photo, username, bio, terms</td><td>Assigns a poster per account</td><td>Creates the account to spec</td></tr>
+            <tr><th scope="row">Warm-up</th><td>Give niche keywords and product context</td><td>Turns them into warm-up tasks</td><td>Engages with niche content</td></tr>
+            <tr><th scope="row">Posting</th><td>Approve what goes out</td><td>Schedules, instructs, reminds</td><td>Posts by hand</td></tr>
+            <tr><th scope="row">Proof</th><td>Reads the dashboard</td><td>Collects proof, reports metrics</td><td>Submits proof of each task</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section id="api">
+      <div class="label">04 · Developers</div>
+      <h2>Built for AI agents</h2>
+      <div class="prose">
+        <p>The homepage pitches a second kind of customer: AI agents. It invites you to let your agent task US-based humans with creating warmed-up social accounts and posting content, through the HumanPost API or MCP server. A CLI is mentioned as well.</p>
+        <p>The logic is simple. Agents can now produce video and carousel content in bulk, but they can't hold a phone in Ohio. HumanPost sells itself as the last mile between generated content and a real feed.</p>
+      </div>
+
+      <div class="docmap">
+        <div><div class="label">Getting started</div><ul><li>Introduction</li><li>Quickstart</li><li>Carousels</li></ul></div>
+        <div><div class="label">API</div><ul><li>API Reference</li><li>Errors &amp; pagination</li></ul></div>
+        <div><div class="label">Agents</div><ul><li>MCP server</li></ul></div>
+        <div><div class="label">For LLMs</div><ul><li>View as markdown</li><li>llms.txt</li></ul></div>
+      </div>
+
+      <h3>From API key to queued post in three calls</h3>
+      <p class="prose small muted">Create a key under Dashboard → Settings → API &amp; MCP and send it as a Bearer token. The docs say to keep keys server-side and to send a unique <code>Idempotency-Key</code> with every post so retries are safe.</p>
+<pre><code><span class="c"># 1. Find the account IDs you want to publish to</span>
+<span class="k">GET</span>  /v2/accounts
+Authorization: Bearer $HUMANPOST_API_KEY
+
+<span class="c"># 2. Hand over media by URL</span>
+<span class="k">POST</span> /v2/uploads
+{ <span class="s">"kind"</span>: <span class="s">"video"</span>, <span class="s">"sourceUrl"</span>: <span class="s">"https://cdn.example.com/hook-07.mp4"</span> }
+
+<span class="c"># 3. Queue one post across several accounts</span>
+<span class="k">POST</span> /v2/posts
+Idempotency-Key: 3f9a1c2e-…
+{ <span class="s">"mediaIds"</span>: [<span class="s">"med_…"</span>],
+  <span class="s">"accountIds"</span>: [<span class="s">"acc_…"</span>, <span class="s">"acc_…"</span>],
+  <span class="s">"caption"</span>: <span class="s">"day 3 of using this app to plan trips"</span> }</code></pre>
+      <p class="small muted">Reconstructed from the public quickstart. Paths and parameters follow its description; exact field names may differ. The examples call a <code>publishingApi</code> on a Google Cloud Functions host, which points to a lean serverless stack.</p>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing">
+      <div class="label">05 · Money</div>
+      <h2>Pricing</h2>
+      <p class="prose">Two self-serve plans with different logic. Learning is cheap to start and charges by the view. Scaling is a flat fee with all views included. Prices as indexed in October 2026.</p>
+
+      <div class="plans">
+        <div class="plan">
+          <h3>Learning</h3>
+          <p class="tag">Pay as you go, for early tests</p>
+          <div class="price">$180 <small>/ month</small></div>
+          <div class="small muted">$540 billed quarterly · plus a $100 prepaid view balance</div>
+          <ul>
+            <li>Up to 200 posts a month</li>
+            <li>Up to 5 accounts</li>
+            <li>5 comment tasks · 1 SparkCode request</li>
+            <li>Views billed at $2.50 per 1,000</li>
+            <li>View charges capped at $250 per post</li>
+          </ul>
+          <div class="foot">Positioned for accounts averaging under 1.5K views per post.</div>
+        </div>
+        <div class="plan featured">
+          <h3>Scaling</h3>
+          <p class="tag">Flat rate, for formats you know go viral</p>
+          <div class="price">$1,125 <small>/ month</small></div>
+          <div class="small muted">$3,375 billed quarterly</div>
+          <ul>
+            <li>Up to 250 posts a month<sup>*</sup></li>
+            <li>Up to 8 accounts</li>
+            <li>30 comment tasks · 3 SparkCode requests</li>
+            <li>All views included, no view fees</li>
+          </ul>
+          <div class="foot">“Scaling customers averaged a $0.67 CPM in the last 90 days.” Works out to $4.50 a post at full volume.</div>
+        </div>
+        <div class="plan">
+          <h3>Enterprise</h3>
+          <p class="tag">For larger programs</p>
+          <div class="price">Custom</div>
+          <div class="small muted">Talk to sales</div>
+          <ul>
+            <li>Flexible post volume</li>
+            <li>Custom account capacity</li>
+            <li>Custom task and SparkCode limits</li>
+          </ul>
+          <div class="foot">Managed Service adds strategy, content creation and testing by HumanPost's team. Price not public.</div>
+        </div>
+      </div>
+
+      <ul class="prose small">
+        <li>Credits renew monthly on every plan. Unused credits don't roll over.</li>
+        <li>The Learning deposit is a prepaid balance for view charges, not an extra fee, and unused balance can be withdrawn. If it drops below 20% of the required deposit, Learning posts pause until you top it up.</li>
+        <li><sup>*</sup>The Scaling post limit appears garbled in indexed copies of the page (“2 5 0/posts”). 250 is the likely value; confirm on the live page.</li>
+      </ul>
+    </section>
+
+    <!-- Calculator -->
+    <section id="calculator">
+      <div class="label">06 · Tool</div>
+      <h2>Which plan is cheaper?</h2>
+      <p class="prose">Move the sliders to see the monthly bill and the effective CPM (cost per 1,000 views) on each plan. Uses the public list prices above.</p>
+
+      <div class="plate">
+        <div class="calc">
+          <div>
+            <div class="field">
+              <label for="posts">Posts per month</label>
+              <div class="row">
+                <input id="posts" type="range" min="10" max="250" step="10" value="120">
+                <output id="posts-out" for="posts">120</output>
+              </div>
+              <div class="hint">Learning allows up to 200, Scaling up to 250.</div>
+            </div>
+            <div class="field">
+              <label for="views">Average views per post</label>
+              <div class="row">
+                <input id="views" type="range" min="0" max="1000" step="1" value="434">
+                <output id="views-out" for="views">4,000</output>
+              </div>
+              <div class="hint">Learning's view charge stops at $250 a post, which it hits at 100,000 views.</div>
+            </div>
+            <p class="totals" id="totals">480,000 views a month in total</p>
+          </div>
+
+          <div class="result" aria-live="polite">
+            <div class="res-card" id="card-l">
+              <div class="res-head"><strong>Learning</strong><span class="res-fig"><b id="l-cost">$1,380</b> / mo</span></div>
+              <div class="bar l"><i id="l-bar"></i></div>
+              <p class="res-note" id="l-note">$180 base + $1,200 in view charges · $2.88 CPM</p>
+            </div>
+            <div class="res-card" id="card-s">
+              <div class="res-head"><strong>Scaling</strong><span class="res-fig"><b id="s-cost">$1,125</b> / mo</span></div>
+              <div class="bar s"><i id="s-bar"></i></div>
+              <p class="res-note" id="s-note">Flat fee, all views included · $2.34 CPM</p>
+            </div>
+            <p class="verdict" id="verdict">Scaling is cheaper here.</p>
+            <p class="res-note">Break-even: Learning costs less until your posts earn about 378,000 views a month in total. The $100 deposit is excluded because it is spent on view charges, not added to them.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results">
+      <div class="label">07 · Evidence</div>
+      <h2>Claimed results</h2>
+      <p class="prose">The site leads with one case study, a travel app. The app's team automated its content production and sent the output to HumanPost, where people posted each piece by hand. <span class="chip claim">Self-reported</span></p>
+
+      <div class="figs">
+        <div><b>19.2M</b><span>cumulative views</span></div>
+        <div><b>827</b><span>posts published</span></div>
+        <div><b>22</b><span>US accounts</span></div>
+        <div><b>$0.22</b><span>CPM at $5 a post</span></div>
+      </div>
+
+      <div class="mathcheck">827 posts × $5 = $4,135 · $4,135 ÷ 19,200,000 views × 1,000 = $0.215 CPM · ≈ 23,200 views per post <span class="chip checked">Internally consistent</span></div>
+
+      <h3>Other CPM claims</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Claim</th><th scope="col">Source</th><th scope="col">Figure</th></tr></thead>
+          <tbody>
+            <tr><td>Consumer apps reach millions of views</td><td>Mehak Vohra on X</td><td class="num">under $0.10 CPM</td></tr>
+            <tr><td>One customer after joining</td><td>Mehak Vohra on X</td><td class="num">7.8M views · $0.07</td></tr>
+            <tr><td>Another campaign, organic reach</td><td>Mehak Vohra on X</td><td class="num">4M views · $0.23</td></tr>
+            <tr><td>Scaling customers, last 90 days</td><td>humanpost.com pricing</td><td class="num">$0.67 average</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose">
+        <p>The spread runs from $0.07 to $0.67. The best examples come from the founder's posts; the site average is the number to plan around. One named customer, Farid Adibi, is quoted on the homepage saying the self-serve platform makes it easy to get more content out, test new creative and scale what works.</p>
+      </div>
+    </section>
+
+    <!-- Team -->
+    <section id="team">
+      <div class="label">08 · People</div>
+      <h2>Team and timeline</h2>
+      <div class="prose">
+        <p><strong>Mehak Vohra</strong> (co-founder, CEO) is a repeat founder from the growth and education world. She studied computer science at Purdue and left after her second year. <strong>Miles Feldstein</strong> is the other co-founder, named on the company's careers page. A data aggregator lists HumanPost as a San Francisco company founded in 2026.</p>
+      </div>
+      <ol class="timeline">
+        <li><span class="when">2017</span><p>Vohra runs for mayor of San Francisco and says she is the youngest candidate in the city's history. <span class="chip claim">Self-reported</span></p></li>
+        <li><time datetime="2019-03">Mar 2019</time><p>Founds SkillBank, “learning from anonymous experts”. One profile says it raised $2M.</p></li>
+        <li><span class="when">Before 2026</span><p>Founds OnDelta, a 12-week remote academy for people starting careers in growth.</p></li>
+        <li><time datetime="2026-01">Jan 2026</time><p>Moves back to San Francisco and starts building HumanPost.</p></li>
+        <li><span class="when">Mid 2026</span><p>Brings on a co-founder, according to a July post on X.</p></li>
+        <li><time datetime="2026-08-28">28 Aug 2026</time><p>Launch thread on X. Vohra later says it reached about 300K views, “with a little hate”, and drew backlash over pricing.</p></li>
+        <li><span class="when">Autumn 2026</span><p>Hiring a Content Strategist ($60–85K plus bonus, after a paid two-week trial at $35 an hour) to keep every client at least three days ahead with no missed posting days. Remote, SF or NYC.</p></li>
+      </ol>
+    </section>
+
+    <!-- Risks -->
+    <section id="risks">
+      <div class="label">09 · Scrutiny</div>
+      <h2>Reception and risks</h2>
+      <ul class="risks">
+        <li><div><strong>Platform rules</strong><p>TikTok's Community Guidelines have sections on Deceptive Behaviors and Fake Engagement and on Commercial Disclosure and Paid Marketing, and TikTok can remove accounts tied to coordinated inauthentic behavior. Brand-designed persona accounts run by paid posters sit close to those lines. Indexed copies of HumanPost's site don't address ad disclosure.</p></div></li>
+        <li><div><strong>Account ownership</strong><p>The public pages don't say who owns the accounts, who holds the logins, or what happens to the accounts and their followers when you cancel.</p></div></li>
+        <li class="mid"><div><strong>Pricing backlash</strong><p>Replies to the launch thread attacked the price; one called the $250 per-post view cap “crazy”. Vohra says customers answered in the replies and explained why it's worth paying for.</p></div></li>
+        <li class="mid"><div><strong>Unaudited numbers</strong><p>The network size, the US-only and no-VPN claims, and every CPM figure come from the company. No third-party audit was found.</p></div></li>
+        <li class="mid"><div><strong>A very young company</strong><p>Founded in 2026 and still hiring its first strategists. Funding is not public. An aggregator lists one employee, which is probably out of date.</p></div></li>
+      </ul>
+    </section>
+
+    <!-- Landscape -->
+    <section id="landscape">
+      <div class="label">10 · Market</div>
+      <h2>Landscape</h2>
+      <p class="prose">HumanPost sits where three markets meet: UGC creator marketplaces, managed social distribution, and the new “AI agents hire humans” platforms.</p>
+      <div class="table-wrap">
+        <table class="wide-table">
+          <thead><tr><th scope="col">Company</th><th scope="col">Model</th><th scope="col">How it differs from HumanPost</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">HumanPost</th><td>US posters run brand-designed accounts; dashboard, API and MCP</td><td>Reference point. US-only, hand-posted, plan-based pricing.</td></tr>
+            <tr><th scope="row"><a href="https://www.tokportal.com/vs/influencer-agency-alternative-tiktok-ugc-scale" target="_blank" rel="noopener">TokPortal</a></th><td>Human operators on real devices with local SIMs in 20+ countries; API posting and analytics</td><td>International coverage, aimed at teams that already have videos</td></tr>
+            <tr><th scope="row"><a href="https://www.launchpointhq.com/blog/best-managed-ugc-service-tiktok-reels-shorts" target="_blank" rel="noopener">Launchpoint</a></th><td>Managed UGC from a 20,000+ creator network; niche-account posting product</td><td>Full service including creators, contracts and payouts</td></tr>
+            <tr><th scope="row">Insense, Billo, Influee</th><td>Creator marketplaces for UGC, organic posts and creator ads</td><td>Creators make the content and often post from their own audiences</td></tr>
+            <tr><th scope="row">Creatify and other AI UGC tools</th><td>AI-generated creator-style videos from a product URL</td><td>Make content but don't distribute it; a natural upstream partner</td></tr>
+            <tr><th scope="row">Human Pages, HumanPing, HumanOps, human-mcp.io</th><td>Marketplaces where AI agents hire people for real-world tasks over MCP or API</td><td>General tasks, not social-specific; human-mcp.io takes a 15% fee</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Build -->
+    <section id="build">
+      <div class="label">11 · For your idea</div>
+      <h2>Building your own</h2>
+      <p class="prose">What HumanPost gets right, and where a similar product could go. The suggestions favor versions that stay inside platform rules, because those are the ones that last and that larger brands will buy.</p>
+
+      <h3>Six lessons from the teardown</h3>
+      <div class="lessons">
+        <div><h3>Sell the finished task</h3><p>Buyers don't pay for access to posters. They pay for posts that happened, with proof. The routing, reminders and proof collection are the actual product.</p></div>
+        <div><h3>Two-speed pricing</h3><p>A cheap entry plan where cost follows views, capped per post, then a flat plan once you know what works. The deposit covers view charges that arrive after the post.</p></div>
+        <div><h3>Make agents a customer on day one</h3><p>API, MCP server and llms.txt from the start. Content-generating agents need somewhere to send their output, and they don't care about your UI.</p></div>
+        <div><h3>Constrain the worker</h3><p>Posters get zero creative control. That makes quality predictable, keeps tasks small, and lets you scale supply without training people.</p></div>
+        <div><h3>Supply is the moat</h3><p>A live counter of available people, location checks and niche-matched warm-up are hard to copy. Software is the easy half.</p></div>
+        <div><h3>Launch loud, let customers defend you</h3><p>A provocative founder thread got about 300K views. The price backlash became a stage for customers to explain the value.</p></div>
+      </div>
+
+      <h3>Directions worth exploring</h3>
+      <div class="ideas">
+        <div class="idea"><strong>A disclosed creator network</strong><p>The same task router, but posts go out from posters' real personal accounts with the platform's paid-partnership label. Slower to scale, but compliant, and sellable to brands whose legal teams would reject persona accounts.</p></div>
+        <div class="idea"><strong>Agent-to-human tasks beyond social</strong><p>The orchestration layer works for product photos, in-store checks, usability tests, local flyering or translation QA. Stay away from reviews: the FTC's 2024 rule bans fake reviews and testimonials.</p></div>
+        <div class="idea"><strong>Markets HumanPost doesn't serve</strong><p>HumanPost is US-only. Brands entering other regions need native speakers who know local trends and slang, from South Asia to the Gulf to Latin America.</p></div>
+        <div class="idea"><strong>The supply-side app</strong><p>A task inbox for workers with proof capture, payout tracking and reputation. Every network like this needs one, and few build it well.</p></div>
+        <div class="idea"><strong>An experiment engine</strong><p>Test hooks and formats across many disclosed accounts, then report which creative wins with real statistics, and feed the winners to ads through Spark-style codes.</p></div>
+      </div>
+
+      <h3>Questions to answer before you build</h3>
+      <ul class="checklist">
+        <li>Who owns each account, and who holds the logins?</li>
+        <li>How are workers recruited, verified, paid and taxed?</li>
+        <li>What do each platform's terms say about managed and multiple accounts?</li>
+        <li>How do you prove a task really happened?</li>
+        <li>How is sponsorship disclosed on every post?</li>
+        <li>What stops a worker from posting off-brand content on a client account?</li>
+        <li>What does a post cost you in worker pay, and what is your margin at $4.50 a post?</li>
+        <li>What happens to a campaign when a platform restricts an account?</li>
+      </ul>
+    </section>
+
+    <!-- Namesakes -->
+    <section id="namesakes">
+      <div class="label">12 · Disambiguation</div>
+      <h2>Same name, different products</h2>
+      <p class="prose">humanpost.com and humanpost.co serve the same product described above; the docs and the team's email live on .co. Several unrelated projects use the name too.</p>
+      <div class="namesakes">
+        <div><a href="https://humanpost.app/" target="_blank" rel="noopener">humanpost.app</a><p>A free Chrome extension for growing on X, with reply scoring, a tweet checker and an “Algo Analyzer”.</p></div>
+        <div><a href="https://humanpost.io/" target="_blank" rel="noopener">humanpost.io</a><p>A human-only social network concept. AI use is banned and there is no algorithmic ranking.</p></div>
+        <div><a href="https://humanpost.site/" target="_blank" rel="noopener">humanpost.site</a><p>Proves a LinkedIn post was written by a person by recording the writing process, then shows a “Human Score”.</p></div>
+        <div><a href="https://x.com/DanielOstX/status/2020891579494347204" target="_blank" rel="noopener">Daniel Ost's HumanPost</a><p>A February 2026 side project that rewrites AI text to sound like a real person.</p></div>
+      </div>
+    </section>
+
+    <!-- Method -->
+    <section id="method">
+      <div class="label">13 · Method</div>
+      <h2>Method and gaps</h2>
+      <div class="prose">
+        <p>humanpost.com could not be opened directly during research because the research environment's network policy blocked the domain. This report is built from search-indexed copies of humanpost.com and humanpost.co, the docs quickstart, the careers page, the founder's posts on X, and third-party profiles. The launch date comes from the launch post's ID, which encodes its timestamp. Accurate as of 9 October 2026.</p>
+        <p>Not found or not confirmed:</p>
+        <ul>
+          <li>What posters are paid, and how they are recruited and verified.</li>
+          <li>The full API reference and the list of MCP tools.</li>
+          <li>Whether the 13,908 counter is live or was a snapshot.</li>
+          <li>The average CPM, shown as $0.67 in some indexed copies and $0.61 in another.</li>
+          <li>The exact Scaling post limit.</li>
+          <li>Account ownership after cancellation, and any funding.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Sources -->
+    <section id="sources">
+      <div class="label">14 · References</div>
+      <h2>Sources</h2>
+      <ol class="sources">
+        <li><a href="https://humanpost.com/" target="_blank" rel="noopener">HumanPost homepage (humanpost.com)</a></li>
+        <li><a href="https://humanpost.co/" target="_blank" rel="noopener">HumanPost homepage and pricing (humanpost.co)</a></li>
+        <li><a href="https://humanpost.co/docs/quickstart" target="_blank" rel="noopener">HumanPost docs: Quickstart</a></li>
+        <li><a href="https://humanpost.co/careers/content-strategist" target="_blank" rel="noopener">HumanPost careers: Content Strategist</a></li>
+        <li><a href="https://x.com/itsmehakvohra/status/2093448950384820647" target="_blank" rel="noopener">Mehak Vohra, launch post on X</a></li>
+        <li><a href="https://x.com/itsmehakvohra" target="_blank" rel="noopener">Mehak Vohra on X</a></li>
+        <li><a href="https://www.linkedin.com/in/mehakvohra/" target="_blank" rel="noopener">Mehak Vohra on LinkedIn</a></li>
+        <li><a href="https://www.crunchbase.com/person/mehak-vohra" target="_blank" rel="noopener">Mehak Vohra on Crunchbase</a></li>
+        <li><a href="https://medium.com/mehak-vohra/welcome-2b74cf628ba6" target="_blank" rel="noopener">Mehak Vohra, “About Me” on Medium</a></li>
+        <li><a href="https://rocketreach.co/humanpost-profile_b6490b26cbc2ed84" target="_blank" rel="noopener">HumanPost company profile, RocketReach</a></li>
+        <li><a href="https://conductatlas.com/platform/tiktok/tiktok-community-guidelines/coordinated-inauthentic-behavior-and-influence-operations-prohibition" target="_blank" rel="noopener">TikTok guidelines on coordinated inauthentic behavior, ConductAtlas</a></li>
+        <li><a href="https://www.tokportal.com/vs/influencer-agency-alternative-tiktok-ugc-scale" target="_blank" rel="noopener">TokPortal</a></li>
+        <li><a href="https://www.launchpointhq.com/blog/best-managed-ugc-service-tiktok-reels-shorts" target="_blank" rel="noopener">Launchpoint: managed UGC services</a></li>
+        <li><a href="https://influencermarketinghub.com/user-generated-content-platforms/" target="_blank" rel="noopener">Influencer Marketing Hub: UGC platforms for 2026</a></li>
+        <li><a href="https://github.com/human-pages-ai/humanpages" target="_blank" rel="noopener">Human Pages MCP server (GitHub)</a></li>
+        <li><a href="https://humanping.io/" target="_blank" rel="noopener">HumanPing</a></li>
+        <li><a href="https://humanops.io/" target="_blank" rel="noopener">HumanOps</a></li>
+        <li><a href="https://human-mcp.io/" target="_blank" rel="noopener">human-mcp.io</a></li>
+        <li><a href="https://arxiv.org/html/2602.19514v1" target="_blank" rel="noopener">Security Risks of AI Agents Hiring Humans (arXiv)</a></li>
+        <li><a href="https://humanpost.app/" target="_blank" rel="noopener">humanpost.app</a></li>
+        <li><a href="https://humanpost.io/" target="_blank" rel="noopener">humanpost.io</a></li>
+        <li><a href="https://humanpost.site/" target="_blank" rel="noopener">humanpost.site</a></li>
+        <li><a href="https://x.com/DanielOstX/status/2020891579494347204" target="_blank" rel="noopener">Daniel Ost on X</a></li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<footer class="pagefoot">
+  <div class="wrap">Independent research for the distribution-channels project. Not affiliated with HumanPost. Figures marked as company claims are unverified.</div>
+</footer>
+<div class="airmail" aria-hidden="true"></div>
+
+<script>
+(function () {
+  var posts = document.getElementById('posts');
+  var views = document.getElementById('views');
+  if (!posts || !views) return;
+
+  var LEARN_BASE = 180, LEARN_RATE = 2.5, LEARN_CAP = 250, LEARN_MAX = 200;
+  var SCALE_FEE = 1125, SCALE_MAX = 250;
+
+  function viewsFromSlider(v) {
+    var raw = 200 * Math.pow(1000, v / 1000);
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)) - 1);
+    return Math.round(raw / mag) * mag;
+  }
+  function money(n) {
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+  function cpm(n) {
+    return '$' + n.toFixed(2);
+  }
+  function set(id, text) { document.getElementById(id).textContent = text; }
+
+  function update() {
+    var p = Number(posts.value);
+    var v = viewsFromSlider(Number(views.value));
+    var total = p * v;
+    var perPost = Math.min(v / 1000 * LEARN_RATE, LEARN_CAP);
+    var learnViews = p * perPost;
+    var learn = LEARN_BASE + learnViews;
+    var scale = SCALE_FEE;
+    var learnOk = p <= LEARN_MAX;
+    var scaleOk = p <= SCALE_MAX;
+
+    set('posts-out', p.toLocaleString('en-US'));
+    set('views-out', v.toLocaleString('en-US'));
+    set('totals', total.toLocaleString('en-US') + ' views a month in total');
+
+    set('l-cost', money(learn));
+    set('s-cost', money(scale));
+    set('l-note', learnOk
+      ? money(LEARN_BASE) + ' base + ' + money(learnViews) + ' in view charges' + (perPost >= LEARN_CAP ? ' (capped)' : '') + ' · ' + cpm(learn / total * 1000) + ' CPM'
+      : 'Over Learning’s 200-post limit');
+    set('s-note', 'Flat fee, all views included · ' + cpm(scale / total * 1000) + ' CPM');
+
+    var max = Math.max(learn, scale);
+    document.getElementById('l-bar').style.width = (learn / max * 100) + '%';
+    document.getElementById('s-bar').style.width = (scale / max * 100) + '%';
+
+    var cardL = document.getElementById('card-l');
+    var cardS = document.getElementById('card-s');
+    cardL.classList.toggle('off', !learnOk);
+    cardS.classList.toggle('off', !scaleOk);
+    var learnWins = learnOk && learn < scale;
+    cardL.classList.toggle('win', learnWins);
+    cardS.classList.toggle('win', !learnWins && scaleOk);
+
+    var verdict;
+    if (!learnOk) verdict = 'Only Scaling covers this many posts.';
+    else if (Math.abs(learn - scale) < 25) verdict = 'The two plans cost about the same here.';
+    else if (learnWins) verdict = 'Learning is cheaper here, by ' + money(scale - learn) + ' a month.';
+    else verdict = 'Scaling is cheaper here, by ' + money(learn - scale) + ' a month.';
+    set('verdict', verdict);
+  }
+
+  posts.addEventListener('input', update);
+  views.addEventListener('input', update);
+  update();
+})();
+
+(function () {
+  if (!('IntersectionObserver' in window)) return;
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      links.forEach(function (a) { a.removeAttribute('aria-current'); });
+      var a = map[e.target.id];
+      if (a) a.setAttribute('aria-current', 'true');
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  Object.keys(map).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+})();
+</script>
+</body>
+</html>
